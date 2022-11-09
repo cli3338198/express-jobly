@@ -206,3 +206,59 @@ describe("remove", function () {
     }
   });
 });
+
+/******************************* filter by name/minimum or maximum employees */
+
+describe("filter by name", function () {
+  test("works", async function () {
+    let companies = await Company.filter({ nameLike: "C" });
+    console.log("Companies object", companies);
+    expect(companies).toEqual([
+      {
+        handle: "c1",
+        name: "C1",
+        description: "Desc1",
+        numEmployees: 1,
+        logoUrl: "http://c1.img",
+      },
+      {
+        handle: "c2",
+        name: "C2",
+        description: "Desc2",
+        numEmployees: 2,
+        logoUrl: "http://c2.img",
+      },
+      {
+        handle: "c3",
+        name: "C3",
+        description: "Desc3",
+        numEmployees: 3,
+        logoUrl: "http://c3.img",
+      },
+    ]);
+  });
+
+});
+
+describe("filter by number of employees", function () {
+  test("works", async function () {
+    let companies = await Company.filter({ minEmployees: 2, maxEmployees: 3});
+    console.log("Companies object", companies);
+    expect(companies).toEqual([
+      {
+        handle: "c2",
+        name: "C2",
+        description: "Desc2",
+        numEmployees: 2,
+        logoUrl: "http://c2.img",
+      },
+      {
+        handle: "c3",
+        name: "C3",
+        description: "Desc3",
+        numEmployees: 3,
+        logoUrl: "http://c3.img",
+      },
+    ]);
+  });
+});
