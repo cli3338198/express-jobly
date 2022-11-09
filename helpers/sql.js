@@ -6,7 +6,7 @@ const { BadRequestError } = require("../expressError");
  * - converts the keys into a format for a sql query
  * - return an object containing two arrays of the keys and values
  *
- *    {firstName: "Aliya", age: 32} => ({
+ *    {firstName: "Aliya", age: 32}, {firstName: "first_name"} => ({
  *        setCols: ['"first_name"=$1', '"age"=$2'],
  *        values: ["Aliya", 32]
  *        })

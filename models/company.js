@@ -2,6 +2,7 @@
 
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
+const { makeWhere } = require("../helpers/makeWhere");
 const { sqlForPartialUpdate } = require("../helpers/sql");
 
 /** Related functions for companies. */
@@ -21,7 +22,8 @@ class Company {
       `SELECT handle
            FROM companies
            WHERE handle = $1`,
-      [handle]);
+      [handle]
+    );
 
     if (duplicateCheck.rows[0])
       throw new BadRequestError(`Duplicate company: ${handle}`);
@@ -36,13 +38,7 @@ class Company {
            VALUES
              ($1, $2, $3, $4, $5)
            RETURNING handle, name, description, num_employees AS "numEmployees", logo_url AS "logoUrl"`,
-      [
-        handle,
-        name,
-        description,
-        numEmployees,
-        logoUrl,
-      ],
+      [handle, name, description, numEmployees, logoUrl]
     );
     const company = result.rows[0];
 
@@ -62,7 +58,8 @@ class Company {
                 num_employees AS "numEmployees",
                 logo_url AS "logoUrl"
            FROM companies
-           ORDER BY name`);
+           ORDER BY name`
+    );
     return companiesRes.rows;
   }
 
@@ -83,7 +80,8 @@ class Company {
                 logo_url AS "logoUrl"
            FROM companies
            WHERE handle = $1`,
-      [handle]);
+      [handle]
+    );
 
     const company = companyRes.rows[0];
 
@@ -105,12 +103,10 @@ class Company {
    */
 
   static async update(handle, data) {
-    const { setCols, values } = sqlForPartialUpdate(
-      data,
-      {
-        numEmployees: "num_employees",
-        logoUrl: "logo_url",
-      });
+    const { setCols, values } = sqlForPartialUpdate(data, {
+      numEmployees: "num_employees",
+      logoUrl: "logo_url",
+    });
     const handleVarIdx = "$" + (values.length + 1);
 
     const querySql = `
@@ -137,31 +133,25 @@ class Company {
            FROM companies
            WHERE handle = $1
            RETURNING handle`,
-      [handle]);
+      [handle]
+    );
     const company = result.rows[0];
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
   }
 
-
   /** Filter companies with optional parameters of
    * name, minimum employees, or maximum employees.
-   *
-   * Throws BadRequestError if minimum number is greater than maximum.
    */
   static async filter({ nameLike, minEmployees, maxEmployees }) {
+    const [whereString, parameters] = makeWhere({
+      nameLike,
+      minEmployees,
+      maxEmployees,
+    });
 
-    if (minEmployees !== undefined
-      && maxEmployees !== undefined
-      && minEmployees > maxEmployees) {
-      throw new BadRequestError(
-        "Minimum must be less than or equal to maximum."
-      );
-    }
+    console.log({ whereString });
 
-    nameLike = nameLike !== undefined ? nameLike : ""
-
-    console.log("requests!!!!!!", nameLike, minEmployees, maxEmployees);
     const companiesRes = await db.query(
       `SELECT handle,
               name,
@@ -169,17 +159,13 @@ class Company {
               num_employees AS "numEmployees",
               logo_url AS "logoUrl"
            FROM companies
-           WHERE name ILIKE $1
-              AND num_employees >= $2
-              AND num_employees <= $3
+           ${whereString}
            ORDER BY name`,
-      ["%" + nameLike + "%",
-      minEmployees || 0,
-      maxEmployees || 9999999]);
+      parameters
+    );
+
     return companiesRes.rows;
   }
 }
-
-
 
 module.exports = Company;
