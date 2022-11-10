@@ -37,32 +37,64 @@ function ensureLoggedIn(req, res, next) {
   return next();
 }
 
-/**Middleware to check if user is admin, if not check if user matches
- * user being changed.
+/**Middleware to check if user is admin.
  *
  * If not, raises Unauthorized.
  */
-function ensureIsAdminOrSameUser(req, res, next) {
-  const authHeader = req.headers && req.headers.authorization;
 
-  if (authHeader) {
-    const token = authHeader.replace(/^[Bb]earer /, "").trim();
-    res.locals.user = jwt.verify(token, SECRET_KEY);
+function ensureIsAdmin(req, res, next) {
+  if (!res.locals.user) throw new UnauthorizedError();
 
-    // Object.values(req.query).length
-
-    if (!res.locals.user.isAdmin) {
-      if (req.params.username !== res.locals.user.username) {
-        throw new UnauthorizedError();
-      }
-    }
+  if (res.locals.user.isAdmin !== true) {
+    // OLD EXPRESS STYLE
+    // return next(new UnauthorizedError());
+    throw new UnauthorizedError();
   }
   return next();
 }
 
+// OLD EXPRESS STYLE
+
+/**Middleware to check if is same user.
+ *
+ * If not, raises Unauthorized.
+ */
+// function ensureIsSameUser(err, req, res, next) {
+//   if (err && !res.locals.user) {
+//     throw new UnauthorizedError();
+//   }
+
+//   if (err && req.params.username !== res.locals.user.username) {
+//     throw new UnauthorizedError();
+//   }
+
+//   return next();
+// }
+
+/**Middleware: check if user is admin or the same user that is being queried.
+ *
+ * If not, raises Unauthorized.
+ */
+function ensureAdminOrSameUser(req, res, next) {
+  if (!res.locals.user) {
+    throw new UnauthorizedError();
+  }
+
+  if (
+    !(
+      res.locals.user.isAdmin ||
+      res.locals.user.username === req.params.username
+    )
+  ) {
+    throw new UnauthorizedError();
+  }
+
+  return next();
+}
 
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
-  ensureIsAdminOrSameUser,
+  ensureIsAdmin,
+  ensureAdminOrSameUser,
 };
