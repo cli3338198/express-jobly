@@ -37,17 +37,32 @@ function ensureLoggedIn(req, res, next) {
   return next();
 }
 
-/**Middleware to check if user isAdmin is true
+/**Middleware to check if user is admin, if not check if user matches
+ * user being changed.
  *
  * If not, raises Unauthorized.
  */
-function ensureIsAdmin(req, res, next) {
-  if (!res.locals.user.isAdmin) throw new UnauthorizedError();
+function ensureIsAdminOrSameUser(req, res, next) {
+  const authHeader = req.headers && req.headers.authorization;
+
+  if (authHeader) {
+    const token = authHeader.replace(/^[Bb]earer /, "").trim();
+    res.locals.user = jwt.verify(token, SECRET_KEY);
+
+    // Object.values(req.query).length
+
+    if (!res.locals.user.isAdmin) {
+      if (req.params.username !== res.locals.user.username) {
+        throw new UnauthorizedError();
+      }
+    }
+  }
   return next();
 }
+
 
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
-  ensureIsAdmin,
+  ensureIsAdminOrSameUser,
 };
