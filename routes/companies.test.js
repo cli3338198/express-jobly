@@ -169,7 +169,9 @@ describe("GET /companies", function () {
       .query({ minEmployees: 9, maxEmployees: 1 });
 
     expect(resp.statusCode).toEqual(400);
-    // TODO: test the error message
+    expect(resp.body.error.message).toEqual([
+      "instance.minEmployees is not of a type(s) integer",
+      "instance.maxEmployees is not of a type(s) integer"]);
   });
 
   test("Should throw bad request error if invalid minEmployees", async function () {
@@ -178,6 +180,9 @@ describe("GET /companies", function () {
       .query({ minEmployees: -100 });
 
     expect(resp.statusCode).toEqual(400);
+    expect(resp.body.error.message).toEqual([
+      "instance.minEmployees must be greater than or equal to 0"
+    ]);
   });
 
   test("Should throw bad request error if invalid maxEmployees", async function () {
@@ -186,6 +191,9 @@ describe("GET /companies", function () {
       .query({ maxEmployees: 99999999999999999999999999999999 });
 
     expect(resp.statusCode).toEqual(400);
+    expect(resp.body.error.message).toEqual([
+      "instance.maxEmployees must be less than or equal to 99999999"
+    ]);
   });
 
   test("fails: test next() handler", async function () {

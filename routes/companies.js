@@ -49,12 +49,21 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
  */
 
 router.get("/", async function (req, res, next) {
-  const validator = jsonschema.validate(req.query, companyGetSchema, {
+
+  const validator = jsonschema.validate({
+    minEmployees: Number(req.query.minEmployees),
+    maxEmployees: Number(req.query.maxEmployees),
+    nameLike: req.query.nameLike
+  }, companyGetSchema, {
     required: true,
   });
+
   if (!validator.valid) {
-    // change req.query.... emplyees to number
-    // TODO: change queyr params to numbers etc...
+    console.log({
+      minEmployees: Number(req.query.minEmployees),
+      maxEmployees: Number(req.query.maxEmployees),
+      nameLike: req.query.nameLike
+    })
     const errs = validator.errors.map((e) => e.stack);
     throw new BadRequestError(errs);
   }
