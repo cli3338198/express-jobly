@@ -11,6 +11,7 @@ const {
   commonAfterEach,
   commonAfterAll,
   u1Token,
+  u2Token,
 } = require("./_testCommon");
 const { query } = require("express");
 
@@ -61,6 +62,18 @@ describe("POST /companies", function () {
       })
       .set("authorization", `Bearer ${u1Token}`);
     expect(resp.statusCode).toEqual(400);
+  });
+
+  test("cannot post if user not is_admin", async function () {
+    const resp = await request(app)
+      .post("/companies")
+      .send({
+        ...newCompany,
+        logoUrl: "not-a-url",
+      })
+      .set("authorization", `Bearer ${u2Token}`);
+
+    expect(resp.statusCode).toEqual(401);
   });
 });
 
@@ -169,9 +182,9 @@ describe("GET /companies", function () {
       .query({ minEmployees: 9, maxEmployees: 1 });
 
     expect(resp.statusCode).toEqual(400);
-    expect(resp.body.error.message).toEqual([
-      "instance.minEmployees is not of a type(s) integer",
-      "instance.maxEmployees is not of a type(s) integer"]);
+    expect(resp.body.error.message).toEqual(
+      "Min employees must be less than max employees."
+    );
   });
 
   test("Should throw bad request error if invalid minEmployees", async function () {
@@ -181,7 +194,7 @@ describe("GET /companies", function () {
 
     expect(resp.statusCode).toEqual(400);
     expect(resp.body.error.message).toEqual([
-      "instance.minEmployees must be greater than or equal to 0"
+      "instance.minEmployees must be greater than or equal to 0",
     ]);
   });
 
@@ -192,7 +205,7 @@ describe("GET /companies", function () {
 
     expect(resp.statusCode).toEqual(400);
     expect(resp.body.error.message).toEqual([
-      "instance.maxEmployees must be less than or equal to 99999999"
+      "instance.maxEmployees must be less than or equal to 99999999",
     ]);
   });
 
@@ -300,6 +313,16 @@ describe("PATCH /companies/:handle", function () {
       .set("authorization", `Bearer ${u1Token}`);
     expect(resp.statusCode).toEqual(400);
   });
+
+  test("cannot update if not admin", async function () {
+    const resp = await request(app)
+      .patch(`/companies/c1`)
+      .send({
+        logoUrl: "not-a-url",
+      })
+      .set("authorization", `Bearer ${u2Token}`);
+    expect(resp.statusCode).toEqual(401);
+  });
 });
 
 /************************************** DELETE /companies/:handle */
@@ -322,5 +345,12 @@ describe("DELETE /companies/:handle", function () {
       .delete(`/companies/nope`)
       .set("authorization", `Bearer ${u1Token}`);
     expect(resp.statusCode).toEqual(404);
+  });
+
+  test("cannot delete if not admin", async function () {
+    const resp = await request(app)
+      .delete(`/companies/nope`)
+      .set("authorization", `Bearer ${u2Token}`);
+    expect(resp.statusCode).toEqual(401);
   });
 });
