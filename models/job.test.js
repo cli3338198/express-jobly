@@ -148,14 +148,80 @@ describe("Update", function () {
     expect(result).toEqual({
       title: "Pastry Chef",
       salary: 500000,
-      equity: "0.6",
+      equity: "0.5",
       company_handle: "c2",
       id: expect.any(Number)
     });
   });
-})
+
+  test("not found if id doesn't exist", async function () {
+    try {
+      await Job.update(0, newData);
+      throw new Error("fail test, you shouldn't get here");
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+
+  test("works with null fields", async function () {
+    const newJob = await Job.create(
+      { title: "Baker", salary: 200000, equity: "0.2", company_handle: "c2" }
+    );
+    const result = await Job.update(newJob.id, {
+      title: "Pastry Chef",
+      salary: null,
+      equity: null,
+      company_handle: "c2"
+    });
+
+    expect(result).toEqual({
+      title: "Pastry Chef",
+      salary: null,
+      equity: null,
+      company_handle: "c2",
+      id: expect.any(Number)
+    });
+  });
+
+  test("bad request with no data", async function () {
+    const newJob = await Job.create(
+      { title: "Baker", salary: 200000, equity: "0.2", company_handle: "c2" }
+    );
+    try {
+      await Job.update(newJob.id, {});
+      throw new Error("fail test, you shouldn't get here");
+    } catch (err) {
+      expect(err instanceof BadRequestError).toBeTruthy();
+    }
+  });
+});
 
 /************************************** remove */
+
+describe("remove", function () {
+
+  test("works", async function () {
+    const newJob = await Job.create(
+      { title: "Baker", salary: 200000, equity: "0.2", company_handle: "c2" }
+    );
+    await Job.remove(newJob.id);
+    const res = await db.query(
+      `SELECT title, salary, equity, company_handle, id
+           FROM jobs
+           WHERE id = $1`, [newJob.id]
+    );
+    expect(res.rows.length).toEqual(0);
+  });
+
+  test("not found if no such job id", async function () {
+    try {
+      await Job.remove(0);
+      throw new Error("fail test, you shouldn't get here");
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+});
 
 /******************************* filter by something*/
 // TODO:

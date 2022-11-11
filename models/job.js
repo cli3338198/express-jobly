@@ -85,23 +85,39 @@ class Job {
       salary: "salary",
       equity: "equity"
     });
-    //TODO: fix parameters
-    const handleVarIdx = "$" + (values.length);
 
-    const querySql = await db.query(
+    const querySql =
       `UPDATE jobs
         SET ${setCols}
-        WHERE id = ${handleVarIdx}
-        RETURNING title, salary, equity, company_handle, id`
-    )
+        WHERE id = ${id}
+        RETURNING title, salary, equity, company_handle, id`;
 
-    const result = await db.query(querySql, [...values, id]);
+    const result = await db.query(querySql, [...values]);
     const job = result.rows[0];
 
     if (!job) throw new NotFoundError(`No job with id: ${id}`);
 
     return job;
-    }
+  }
+
+  /** Remove job from database.
+   *
+   * Accepts id and throws error if not found.
+   *
+   * Returns id of job removed.
+   */
+  static async remove(id) {
+    const result = await db.query(
+      `DELETE
+           FROM jobs
+           WHERE id = $1
+           RETURNING id`,
+      [id]
+    );
+    const job = result.rows[0];
+
+    if (!job) throw new NotFoundError(`No job by id: ${id}`);
+  }
 }
 
 module.exports = Job;
