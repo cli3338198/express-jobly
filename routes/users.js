@@ -32,7 +32,7 @@ const router = express.Router();
 
 router.post(
   "/",
-  [ensureLoggedIn, ensureIsAdmin],
+  ensureIsAdmin,
   async function (req, res, next) {
     const validator = jsonschema.validate(req.body, userNewSchema, {
       required: true,
@@ -57,7 +57,7 @@ router.post(
 
 router.get(
   "/",
-  [ensureLoggedIn, ensureIsAdmin],
+  ensureIsAdmin,
   async function (req, res, next) {
     const users = await User.findAll();
     return res.json({ users });

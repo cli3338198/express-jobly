@@ -7,9 +7,7 @@ const express = require("express");
 
 const { BadRequestError } = require("../expressError");
 const {
-  ensureLoggedIn,
   ensureIsAdmin,
-  ensureAdminOrSameUser,
 } = require("../middleware/auth");
 const Company = require("../models/company");
 
@@ -111,7 +109,7 @@ router.get("/:handle", async function (req, res, next) {
  *
  * Returns { handle, name, description, numEmployees, logo_url }
  *
- * Authorization required: login
+ * Authorization required: login as admin
  */
 
 router.patch("/:handle", ensureIsAdmin, async function (req, res, next) {
@@ -129,7 +127,7 @@ router.patch("/:handle", ensureIsAdmin, async function (req, res, next) {
 
 /** DELETE /[handle]  =>  { deleted: handle }
  *
- * Authorization: login
+ * Authorization: login as admin
  */
 
 router.delete("/:handle", ensureIsAdmin, async function (req, res, next) {

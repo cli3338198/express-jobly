@@ -82,7 +82,7 @@ function ensureAdminOrSameUser(req, res, next) {
 
   if (
     !(
-      res.locals.user.isAdmin ||
+      res.locals.user.isAdmin === true ||
       res.locals.user.username === req.params.username
     )
   ) {
