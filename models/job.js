@@ -6,14 +6,12 @@ const { makeWhere } = require("../helpers/makeWhere");
 const { sqlForPartialUpdate } = require("../helpers/sql");
 
 class Job {
-
-  // const duplicateCheck = await db.query(
-  //   `SELECT handle
-  //          FROM companies
-  //          WHERE handle = $1`,
-  //   [handle]
-  // );
-
+  /**Create a job.
+   *
+   * Accepts an object {title: string, salary: number, equity: number, company_handle: string}
+   *
+   * Returns {title: string, salary: number, equity: string, company_handle: string, id: number}
+   */
   static async create({ title, salary, equity, company_handle }) {
     const result = await db.query(
       `INSERT INTO jobs(
@@ -30,8 +28,38 @@ class Job {
 
     return job;
   }
+
+  /**Find all jobs.
+   *
+   * Returns a list like [{title: string, salary: number, equity: string, company_handle: string, id: number}, ...]
+   */
+  static async findAll() {
+    const result = await db.query(`
+      SELECT title, salary, equity, company_handle, id
+      FROM jobs
+    `);
+
+    return result.rows;
+  }
+
+  /**Get a job by id.
+   *
+   * Accepts an id: number.
+   *
+   * Returns a job like {title: string, salary: number, equity: string, company_handle: string, id: number}
+   */
+  static async get(id) {
+    const result = await db.query(
+      `
+      SELECT title, salary, equity, company_handle, id
+      FROM jobs
+      WHERE id === $1
+    `,
+      [id]
+    );
+
+    return result.rows[0];
+  }
 }
-
-
 
 module.exports = Job;
