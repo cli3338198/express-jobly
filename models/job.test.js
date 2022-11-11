@@ -9,8 +9,6 @@ const {
   commonBeforeEach,
   commonAfterEach,
   commonAfterAll,
-  job1,
-  job2,
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -29,7 +27,6 @@ describe("create", function () {
   };
 
   test("works", async function () {
-    console.log("------------------->", newJob);
     const job = await Job.create(newJob);
     newJob.equity = String(newJob.equity);
 
@@ -71,10 +68,8 @@ describe("create", function () {
 /************************************** findAll */
 
 describe("findAll", function () {
-  test("works", async function () {
+  test("works: no filter", async function () {
     const result = await Job.findAll();
-
-    console.log(result, "<-----------------------------");
 
     expect(result).toEqual([
       {
@@ -91,8 +86,20 @@ describe("findAll", function () {
         company_handle: "c2",
         id: expect.any(Number),
       },
-      { ...job1, id: expect.any(Number) },
-      { ...job2, id: expect.any(Number) },
+      {
+        title: "Baker",
+        salary: 300000,
+        equity: "0.3",
+        company_handle: "c2",
+        id: expect.any(Number),
+      },
+      {
+        title: "Baker",
+        salary: 400000,
+        equity: "0.4",
+        company_handle: "c1",
+        id: expect.any(Number),
+      },
     ]);
   });
 });
@@ -101,12 +108,52 @@ describe("findAll", function () {
 
 describe("Get", function () {
   test("Works", async function () {
-    const result = await Job.get(job1.id);
-    expect(result).toEqual(job1);
+    const newJob = await Job.create(
+      { title: "Baker", salary: 500000, equity: "0.6", company_handle: "c2" }
+    );
+    console.log("NEW JOB!!!!!!", newJob);
+
+    const result = await Job.get(newJob.id);
+    console.log("RESULT!!!!!", result);
+
+    expect(result).toEqual(newJob);
+  });
+
+  test("not found if no such job", async function () {
+    try {
+      await Job.get(0);
+      throw new Error("fail test, you shouldn't get here");
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
   });
 });
 
 /************************************** update */
+
+describe("Update", function () {
+
+  const newData = {
+    title: "Pastry Chef",
+    salary: 500000,
+    equity: 0.5
+  };
+
+  test("Works", async function () {
+    const newJob = await Job.create(
+      { title: "Baker", salary: 200000, equity: "0.2", company_handle: "c2" }
+    );
+    const result = await Job.update(newJob.id, newData);
+
+    expect(result).toEqual({
+      title: "Pastry Chef",
+      salary: 500000,
+      equity: "0.6",
+      company_handle: "c2",
+      id: expect.any(Number)
+    });
+  });
+})
 
 /************************************** remove */
 

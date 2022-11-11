@@ -53,13 +53,55 @@ class Job {
       `
       SELECT title, salary, equity, company_handle, id
       FROM jobs
-      WHERE id === $1
+      WHERE id = $1
     `,
       [id]
     );
 
+    const job = result.rows[0];
+
+    if (!job) throw new NotFoundError(`No job with id: ${id}`);
+
     return result.rows[0];
   }
+
+
+  /** Update a job with new data.
+   *
+   * Accepts a job id and an object with new data
+   *
+   * Returns the updated job data: {
+   *  title: string,
+   *  salary: number,
+   *  equity: string,
+   *  company_handle: string,
+   *  id: number
+   * }
+   */
+
+  static async update(id, data) {
+    const { setCols, values } = sqlForPartialUpdate(data, {
+      title: "title",
+      salary: "salary",
+      equity: "equity"
+    });
+    //TODO: fix parameters
+    const handleVarIdx = "$" + (values.length);
+
+    const querySql = await db.query(
+      `UPDATE jobs
+        SET ${setCols}
+        WHERE id = ${handleVarIdx}
+        RETURNING title, salary, equity, company_handle, id`
+    )
+
+    const result = await db.query(querySql, [...values, id]);
+    const job = result.rows[0];
+
+    if (!job) throw new NotFoundError(`No job with id: ${id}`);
+
+    return job;
+    }
 }
 
 module.exports = Job;
