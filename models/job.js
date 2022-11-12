@@ -129,6 +129,7 @@ class Job {
       salary,
     });
 
+    //TODO: fix makeWhere
     console.log({ whereString, parameters });
 
     const jobsResult = await db.query(
