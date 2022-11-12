@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/jobGet.json",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "company_handle": {
+      "type": "string"
+    },
+    "salary": {
+      "type": "integer"
+    },
+    "equity": {
+      "type": "number"
+    }
+  },
+  "additionalProperties": false
+}

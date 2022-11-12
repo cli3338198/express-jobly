@@ -39,6 +39,8 @@ class Job {
       FROM jobs
     `);
 
+    console.log(result, "<------------------");
+
     return result.rows;
   }
 
@@ -65,7 +67,6 @@ class Job {
     return result.rows[0];
   }
 
-
   /** Update a job with new data.
    *
    * Accepts a job id and an object with new data
@@ -83,11 +84,10 @@ class Job {
     const { setCols, values } = sqlForPartialUpdate(data, {
       title: "title",
       salary: "salary",
-      equity: "equity"
+      equity: "equity",
     });
 
-    const querySql =
-      `UPDATE jobs
+    const querySql = `UPDATE jobs
         SET ${setCols}
         WHERE id = ${id}
         RETURNING title, salary, equity, company_handle, id`;
@@ -117,6 +117,33 @@ class Job {
     const job = result.rows[0];
 
     if (!job) throw new NotFoundError(`No job by id: ${id}`);
+  }
+
+  /** Filter jobs with optional parameters of
+   * title, equity, minSalary
+   */
+  static async filter({ title, equity, salary }) {
+    const [whereString, parameters] = makeWhere({
+      title,
+      equity,
+      salary,
+    });
+
+    console.log({ whereString, parameters });
+
+    const jobsResult = await db.query(
+      `SELECT title,
+              id,
+              company_handle,
+              equity,
+              salary
+           FROM jobs
+           ${whereString}
+           ORDER BY title`,
+      parameters
+    );
+
+    return jobsResult.rows;
   }
 }
 

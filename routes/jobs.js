@@ -6,14 +6,12 @@ const jsonschema = require("jsonschema");
 const express = require("express");
 
 const { BadRequestError } = require("../expressError");
-const {
-  ensureIsAdmin,
-} = require("../middleware/auth");
+const { ensureIsAdmin } = require("../middleware/auth");
 const Job = require("../models/job");
 
-// const companyNewSchema = require("../schemas/companyNew.json");
-// const companyUpdateSchema = require("../schemas/companyUpdate.json");
-// const companyGetSchema = require("../schemas/companyGet.json");
+const jobNewSchema = require("../schemas/jobNew.json");
+const jobUpdateSchema = require("../schemas/jobUpdate.json");
+const jobGetSchema = require("../schemas/jobGet.json");
 
 const router = new express.Router();
 
@@ -27,9 +25,13 @@ const router = new express.Router();
  */
 
 router.post("/", ensureIsAdmin, async function (req, res, next) {
-  const validator = jsonschema.validate(req.body, jobNewSchema, {
-    required: true,
-  });
+  const validator = jsonschema.validate(
+    { ...req.body, equity: Number(req.body.equity) },
+    jobNewSchema,
+    {
+      required: true,
+    }
+  );
   if (!validator.valid) {
     const errs = validator.errors.map((e) => e.stack);
     throw new BadRequestError(errs);
@@ -51,41 +53,30 @@ router.post("/", ensureIsAdmin, async function (req, res, next) {
  */
 
 router.get("/", async function (req, res, next) {
-  // const validator = jsonschema.validate(
-  //   {
-  //     minEmployees: req.query.minEmployees && Number(req.query.minEmployees),
-  //     maxEmployees: req.query.maxEmployees && Number(req.query.maxEmployees),
-  //     nameLike: req.query.nameLike,
-  //   },
-  //   jobGetSchema,
-  //   {
-  //     required: true,
-  //   }
-  // );
+  const validator = jsonschema.validate(
+    {
+      title: req.query.title,
+      equity: req.query.equity && Number(req.query.equity),
+      salary: req.query.minSalary && Number(req.query.minSalary),
+    },
+    jobGetSchema,
+    {
+      required: true,
+    }
+  );
 
-  // if (!validator.valid) {
-  //   const errs = validator.errors.map((e) => e.stack);
-  //   throw new BadRequestError(errs);
-  // }
+  if (!validator.valid) {
+    const errs = validator.errors.map((e) => e.stack);
+    throw new BadRequestError(errs);
+  }
 
-  // if (
-  //   req.query.maxEmployees !== undefined &&
-  //   req.query.minEmployees !== undefined
-  // ) {
-  //   if (Number(req.query.minEmployees) > Number(req.query.maxEmployees)) {
-  //     throw new BadRequestError(
-  //       "Min employees must be less than max employees."
-  //     );
-  //   }
-  // }
-
-  if (Object.keys(req.query).length === 0) {
-    const jobs = await Job.findAll();
+  if (Object.values(req.query).length > 0) {
+    const jobs = await Job.filter(req.query);
     return res.json({ jobs });
   }
 
-  // const jobs = await Job.filter(req.query);
-  // return res.json({ jobs });
+  const jobs = await Job.findAll();
+  return res.json({ jobs });
 });
 
 /** GET /[id]  =>  { job }
@@ -96,7 +87,7 @@ router.get("/", async function (req, res, next) {
  * Authorization required: none
  */
 
-router.get("/:id]", async function (req, res, next) {
+router.get("/:id", async function (req, res, next) {
   const job = await Job.get(req.params.id);
   return res.json({ job });
 });
